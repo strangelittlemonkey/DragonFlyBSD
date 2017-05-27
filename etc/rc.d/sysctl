@@ -24,21 +24,21 @@ DragonFly_start()
 	# Read in /etc/sysctl.conf and set things accordingly
 	#
 	if [ -f /etc/sysctl.conf ]; then
-		while read var comments
+		while read -r var
 		do
 			case ${var} in
 			\#*|'')
 				;;
 			*)
-				mib=${var%=*}
-				val=${var#*=}
+				mib=$(echo "${var}" | awk -F= 'BEGIN{FS=OFS="="} {gsub(/^[ \t]*?|[ \t]*?$/, "", $1)} {print $1}')
+				val=$(echo "${var}" | awk -F= 'BEGIN{FS=OFS="="} {gsub(/^[ \t]*?|[ \t]*?$/, "", $2)} {print $2}')
 
 				if current_value=`${SYSCTL} -n ${mib} 2>/dev/null`; then
 					case ${current_value} in
 					${val})
 						;;
 					*)
-						sysctl ${var}
+						sysctl ${mib}=${val}
 						;;
 					esac
 				elif [ "$1" = "last" ]; then
